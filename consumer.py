@@ -3,7 +3,7 @@ from producer import RabbitMQConfigration
 
 try:
     import pika 
-    print('Library installed')
+    import ast
 except:
     raise MemoryError('The pika module is not install , `python3 -m pip  install pika`')
 
@@ -30,7 +30,11 @@ class RabbitMQConsumer:
         self.channel.queue_declare(queue = self.config.queue)
 
     def callback(self,ch,method,properties,body):
-        print(f" [x] Recieved {body}")
+        # print(f" [x] Recieved {body}")
+        data = body.decode('utf-8')
+        payload = ast.literal_eval(data)
+        with open('recieved1.png','wb') as f:
+            f.write(payload)
         
     def consume(self):
         self.channel.basic_consume(

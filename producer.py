@@ -22,21 +22,41 @@ class RabbitMQConfigration(metaclass = MetaClass):
         pass
 
 class RabbitMQ:
+    __slots__ = ['_connection','_channel','config']
     def __init__(self,config) -> None:
         self.config = config
         self._connection = pika.BlockingConnection(pika.ConnectionParameters(host = self.config.host))
         self._channel = self._connection.channel()
         self._channel.queue_declare(queue=self.config.queue)
         
+    def __enter__(self):
+        print('__enter__ callling ..........')
+        # self._connection = pika.BlockingConnection(pika.ConnectionParameters(host = self.config.host))
+        return self
+        
+    def __exit__(self,exc_type,exc_val,exc_tb):
+        print('__exit__ callling ..........')
+        self._connection.close()
+        
     def producer(self,payload):
         self._channel.basic_publish(exchange = self.config.exchange,
                             routing_key = self.config.routing_key,
                             body = str(payload)
                             )
-        self._connection.close()
-
-
+        
+class Image(object):
+    def __init__(self,filename) -> None:
+        self._filename = filename
+        
+    @property
+    def get(self):
+        with open(self._filename,'rb') as f:
+            data = f.read()
+        return data
+    
 if __name__ == '__main__':
     config = RabbitMQConfigration(queue = 'hello',host = 'localhost',routing_key = 'hello')
-    rmq = RabbitMQ(config)
-    rmq.producer({'message':'This is the task produce'})
+    image = Image(filename = "/home/uday/Uday/pesonal/rabitmq/rabitmq_python/send.png")
+    with RabbitMQ(config) as rabbitmqobject:
+        rabbitmqobject.producer(payload=image.get)
+    
