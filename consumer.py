@@ -23,27 +23,29 @@ class RabbitMQConfigration(metaclass = MetaClass):
         pass
 
 class RabbitMQConsumer:
+    __slots__ = ['_config','_connection','_channel']
     def __init__(self,config) -> None:
-        self.config = config
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host = self.config.host))
-        self.channel = self.connection.channel()
-        self.channel.queue_declare(queue = self.config.queue)
+        self._config = config
+        self._connection = pika.BlockingConnection(pika.ConnectionParameters(host = self._config.host))
+        self._channel = self._connection.channel()
+        self._channel.queue_declare(queue = self._config.queue)
+        # print('send Message.............')
 
     def callback(self,ch,method,properties,body):
-        # print(f" [x] Recieved {body}")
+        print(f" Message Recieved !")
         data = body.decode('utf-8')
         payload = ast.literal_eval(data)
         with open('recieved1.png','wb') as f:
             f.write(payload)
         
     def consume(self):
-        self.channel.basic_consume(
-            queue = self.config.queue,
+        self._channel.basic_consume(
+            queue = self._config.queue,
             on_message_callback = self.callback,
-            auto_ack = self.config.auto_ack
+            auto_ack = self._config.auto_ack
         )
         print('[*] Waiting for message. To exit press CTRL+C')
-        self.channel.start_consuming()
+        self._channel.start_consuming()
     
 if __name__ == '__main__':
     conf = RabbitMQConfigration(queue = 'hello',host = 'localhost')

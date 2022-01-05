@@ -22,12 +22,12 @@ class RabbitMQConfigration(metaclass = MetaClass):
         pass
 
 class RabbitMQ:
-    __slots__ = ['_connection','_channel','config']
+    __slots__ = ['_connection','_channel','_config']
     def __init__(self,config) -> None:
-        self.config = config
-        self._connection = pika.BlockingConnection(pika.ConnectionParameters(host = self.config.host))
+        self._config = config
+        self._connection = pika.BlockingConnection(pika.ConnectionParameters(host = self._config.host))
         self._channel = self._connection.channel()
-        self._channel.queue_declare(queue=self.config.queue)
+        self._channel.queue_declare(queue=self._config.queue)
         
     def __enter__(self):
         print('__enter__ callling ..........')
@@ -39,12 +39,13 @@ class RabbitMQ:
         self._connection.close()
         
     def producer(self,payload):
-        self._channel.basic_publish(exchange = self.config.exchange,
-                            routing_key = self.config.routing_key,
+        self._channel.basic_publish(exchange = self._config.exchange,
+                            routing_key = self._config.routing_key,
                             body = str(payload)
                             )
         
 class Image(object):
+    __slots__ = ['_filename']
     def __init__(self,filename) -> None:
         self._filename = filename
         
